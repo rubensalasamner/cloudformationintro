@@ -17,7 +17,7 @@ const awsConfig = {
     disabled: true,
   },
 };
-
+console.log("awsConfig", awsConfig);
 Amplify.configure(awsConfig);
 
 function App() {
