@@ -1,11 +1,13 @@
-const awsConfig = {
+const awsExports = {
   Auth: {
-    region: "eu-north-1", // e.g. us-east-1
-    userPoolId: "eu-north-1_SAd4VLvwy", // e.g. us-east-1_XXXXXXX
-    userPoolWebClientId: "6129ghrqvihlh6daj2hgc70noh", // e.g. XXXXXXXXXXXXXXXX
-    // ... other configurations like identityPoolId if you're using it
+    region: process.env.REACT_APP_USER_POOL_REGION,
+    userPoolId: process.env.REACT_APP_USER_POOL_ID,
+    userPoolWebClientId: process.env.REACT_APP_USER_POOL_WEB_CLIENT_ID,
+    authenticationFlowType: "USER_SRP_AUTH",
   },
-  // ... configurations for other services like Analytics, Interactions, etc.
+  Analytics: {
+    disabled: true,
+  },
 };
 
-export default awsConfig;
+export default awsExports;
