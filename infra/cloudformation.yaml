@@ -1,0 +1,165 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  MyCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Origins:
+          - DomainName: "gandolfo-s3-website.s3.amazonaws.com"
+            Id: "MyS3Origin"
+            S3OriginConfig:
+              OriginAccessIdentity:
+                !Join [
+                  "",
+                  [
+                    "origin-access-identity/cloudfront/",
+                    !Ref MyOriginAccessIdentity,
+                  ],
+                ]
+        DefaultCacheBehavior:
+          TargetOriginId: "MyS3Origin"
+          ViewerProtocolPolicy: "redirect-to-https"
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: "none"
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+          # Or specify an ACM certificate
+  MyOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: "comment"
+  MyBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: "gandolfo-s3-website"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              CanonicalUser: !GetAtt MyOriginAccessIdentity.S3CanonicalUserId
+            Action: "s3:GetObject"
+            Resource: "arn:aws:s3:::gandolfo-s3-website/*"
+  MyCognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: "Gondolfsclub"
+  MyCognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref MyCognitoUserPool
+      ClientName: "gondolfclient"
+      GenerateSecret: false
+  MyHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: "gondolfapi"
+      ProtocolType: "HTTP"
+      Description: "description for HTTP API"
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - "GET"
+          - "POST"
+          - "OPTIONS"
+          - "PUT"
+          - "PATCH"
+          - "DELETE"
+        AllowHeaders:
+          - "Content-Type"
+          - "X-Amz-Date"
+          - "Authorization"
+          - "X-Api-Key"
+        ExposeHeaders:
+          - "x-custom-header"
+        MaxAge: 3600
+
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: "lambdafunction"
+      Runtime: "nodejs20.x"
+      Role: !GetAtt [LambdaExecutionRole, Arn]
+      Handler: "function1.handler"
+      Code:
+        S3Bucket: gondolf-lambda-bucket
+        S3Key: function1.zip
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaCloudWatchPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+  MyLambdaIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref MyHttpApi
+      IntegrationType: "AWS_PROXY"
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyLambdaFunction.Arn}/invocations"
+      PayloadFormatVersion: "2.0"
+  MyRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref MyHttpApi
+      RouteKey: "GET /example"
+      AuthorizationType: "JWT"
+      AuthorizerId: !Ref MyCognitoAuthorizer
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref MyLambdaIntegration
+  MyDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - MyRoute
+      - MyLambdaPermission
+    Properties:
+      ApiId: !Ref MyHttpApi
+      Description: "Initial deployment"
+  MyStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref MyHttpApi
+      DeploymentId: !Ref MyDeployment
+      StageName: "dev"
+      AutoDeploy: true
+  MyCognitoAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref MyHttpApi
+      Name: "MyCognitoAuthorizer"
+      AuthorizerType: "JWT"
+      IdentitySource:
+        - "$request.header.Authorization"
+      JwtConfiguration:
+        Audience:
+          - !Ref MyCognitoUserPoolClient
+        Issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${MyCognitoUserPool}"
+
+  MyLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt MyLambdaFunction.Arn
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyHttpApi}/dev/GET/example"
