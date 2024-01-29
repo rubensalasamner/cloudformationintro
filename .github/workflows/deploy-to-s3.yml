@@ -31,6 +31,12 @@ jobs:
             fi
           done < .env.dev
 
+      - name: Print environment variables
+        run: |
+          echo "REACT_APP_USER_POOL_ID=$REACT_APP_USER_POOL_ID"
+          echo "REACT_APP_USER_POOL_CLIENT_ID=$REACT_APP_USER_POOL_CLIENT_ID"
+          # ... print other relevant variables
+
       - name: Build
         run: npm run build
 
