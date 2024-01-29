@@ -212,4 +212,11 @@ Resources:
                 Resource:
                   - "arn:aws:s3:::gandolfo-s3-website/*"
                   - "arn:aws:s3:::gandolfo-s3-website"
+        - PolicyName: "GithubActionsCloudFrontAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "cloudfront:CreateInvalidation"
+                Resource: "*" # It's recommended to specify the exact ARN of the distribution if possible
       RoleName: "GithubActionsS3Role"
