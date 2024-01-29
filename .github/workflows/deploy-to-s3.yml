@@ -1,10 +1,12 @@
 name: Deploy React App with .env.dev Configuration
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
+permissions:
+  id-token: write
+  statuses: write
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,7 +18,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "16"
+          node-version: "18"
 
       - name: Install Dependencies
         run: npm install
@@ -27,9 +29,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Setup Sensitive Environment Variables
-        run: |
-          echo "REACT_APP_USER_POOL_ID=${{ secrets.REACT_APP_USER_POOL_ID }}" >> .env
-          echo "REACT_APP_USER_POOL_REGION=${{ secrets.REACT_APP_USER_POOL_REGION }}" >> .env
-          echo "REACT_APP_USER_POOL_CLIENT_ID=${{ secrets.REACT_APP_USER_POOL_CLIENT_ID }}" >> .env
-          echo "REACT_APP_AUTH_USER_POOL_WEB_CLIENT_ID=${{ secrets.REACT_APP_AUTH_USER_POOL_WEB_CLIENT_ID }}" >> .env
+      - name: Echo .env contents
+        run: cat .env
