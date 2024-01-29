@@ -27,11 +27,13 @@ Resources:
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
           # Or specify an ACM certificate
+
   MyOriginAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: "comment"
+
   MyBucketPolicy:
     Type: "AWS::S3::BucketPolicy"
     Properties:
@@ -44,16 +46,19 @@ Resources:
               CanonicalUser: !GetAtt MyOriginAccessIdentity.S3CanonicalUserId
             Action: "s3:GetObject"
             Resource: "arn:aws:s3:::gandolfo-s3-website/*"
+
   MyCognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: "Gondolfsclub"
+
   MyCognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref MyCognitoUserPool
       ClientName: "gondolfclient"
       GenerateSecret: false
+
   MyHttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -89,6 +94,7 @@ Resources:
       Code:
         S3Bucket: gondolf-lambda-bucket
         S3Key: function1.zip
+
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -110,6 +116,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: arn:aws:logs:*:*:*
+
   MyLambdaIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -117,6 +124,7 @@ Resources:
       IntegrationType: "AWS_PROXY"
       IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyLambdaFunction.Arn}/invocations"
       PayloadFormatVersion: "2.0"
+
   MyRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -128,6 +136,7 @@ Resources:
         - "/"
         - - "integrations"
           - !Ref MyLambdaIntegration
+
   MyDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
@@ -136,6 +145,7 @@ Resources:
     Properties:
       ApiId: !Ref MyHttpApi
       Description: "Initial deployment"
+
   MyStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
@@ -143,6 +153,7 @@ Resources:
       DeploymentId: !Ref MyDeployment
       StageName: "dev"
       AutoDeploy: true
+
   MyCognitoAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
     Properties:
@@ -163,3 +174,42 @@ Resources:
       FunctionName: !GetAtt MyLambdaFunction.Arn
       Principal: "apigateway.amazonaws.com"
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyHttpApi}/dev/GET/example"
+  GitHubOIDCProvider:
+    Type: "AWS::IAM::OIDCProvider"
+    Properties:
+      Url: "https://token.actions.githubusercontent.com" # GitHub OIDC provider URL
+      ClientIdList:
+        - "sts.amazonaws.com"
+      ThumbprintList:
+        - "a031c46782e6e6c662c2c87c76da9aa62ccabd8e" # Thumbprint for GitHub Actions OIDC
+  GithubActionsRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: !Ref GitHubOIDCProvider
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: "sts.amazonaws.com"
+              # Optional: Use `StringLike` to match the repository that triggers the workflow
+              StringLike:
+                token.actions.githubusercontent.com:sub: "repo:rubensalasamner/cloudformationintro:*" # BYT UT!!!!
+      Policies:
+        - PolicyName: "GithubActionsS3AccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:PutObject"
+                  - "s3:GetObject"
+                  - "s3:DeleteObject"
+                  - "s3:ListBucket"
+                Resource:
+                  - "arn:aws:s3:::gandolfo-s3-website/*"
+                  - "arn:aws:s3:::gandolfo-s3-website"
+      RoleName: "GithubActionsS3Role"

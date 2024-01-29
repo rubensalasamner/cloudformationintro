@@ -31,3 +31,17 @@ jobs:
 
       - name: Echo .env contents
         run: cat .env
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.6.1
+        with:
+          aws-region: eu-north-1
+          role-to-assume: arn:aws:iam::${{ env.REACT_APP_AWS_IAM }}:role/GithubActionsS3Role
+          role-session-name: S3PublishPackage
+          role-duration-seconds: 900
+
+      - name: Check login
+        run: aws sts get-caller-identity
+
+      - name: Deploy static site to S3 bucket
+        run: aws s3 sync ./build s3://${{ env.REACT_APP_BUCKET }}
