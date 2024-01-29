@@ -43,6 +43,9 @@ jobs:
           echo "REACT_APP_USER_POOL_CLIENT_ID=$REACT_APP_USER_POOL_CLIENT_ID"
           # ... print other relevant variables
 
+      - name: Print modified aws-exports.js (Ensure no sensitive info is logged)
+        run: cat src/aws-exports.js
+
       - name: Build
         run: npm run build
 
