@@ -2,9 +2,22 @@ import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import { Amplify } from "aws-amplify";
-import awsConfig from "./aws-exports";
+/* import awsConfig from "./aws-exports"; */
 import { Authenticator } from "@aws-amplify/ui-react";
 console.log("hej", process.env.REACT_APP_USER_POOL_ID);
+
+const awsConfig = {
+  Auth: {
+    region: "eu-central-1",
+    userPoolId: "eu-north-1_MrFc1F4Q0",
+    userPoolWebClientId: "7gec29f0hhna8qvu56booall7s",
+    authenticationFlowType: "USER_SRP_AUTH",
+  },
+  Analytics: {
+    disabled: true,
+  },
+};
+
 Amplify.configure(awsConfig);
 
 function App() {
