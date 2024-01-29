@@ -23,14 +23,16 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Setup .env File
-        run: cp .env.dev .env
-
       - name: Build
         run: npm run build
 
-      - name: Echo .env contents
-        run: cat .env
+      - name: Load .env.dev contents to GitHub Environment
+        run: |
+          while IFS= read -r line || [[ -n "$line" ]]; do
+            if [[ "$line" == *'='* && "$line" != '#'* ]]; then
+              echo "$line" >> $GITHUB_ENV
+            fi
+          done < .env.dev
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.6.1
