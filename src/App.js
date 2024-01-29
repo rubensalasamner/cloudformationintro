@@ -4,7 +4,7 @@ import "./App.css";
 import { Amplify } from "aws-amplify";
 import awsConfig from "./aws-exports";
 import { Authenticator } from "@aws-amplify/ui-react";
-
+console.log("hej", process.env.REACT_APP_USER_POOL_ID);
 Amplify.configure(awsConfig);
 
 function App() {
