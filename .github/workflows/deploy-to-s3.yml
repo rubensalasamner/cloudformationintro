@@ -31,7 +31,13 @@ jobs:
             fi
           done < .env.dev
 
-      - name: Print environment variables
+      - name: Replace environment variables in aws-exports.js
+        run: |
+          sed -i "s/REACT_APP_USER_POOL_REGION_PLACEHOLDER/${{ env.REACT_APP_USER_POOL_REGION }}/g" src/aws-exports.js
+          sed -i "s/REACT_APP_USER_POOL_ID_PLACEHOLDER/${{ env.REACT_APP_USER_POOL_ID }}/g" src/aws-exports.js
+          sed -i "s/REACT_APP_AUTH_USER_POOL_WEB_CLIENT_ID_PLACEHOLDER/${{ env.REACT_APP_AUTH_USER_POOL_WEB_CLIENT_ID }}/g" src/aws-exports.js
+
+      - name: Print environment variables (optional step for debugging)
         run: |
           echo "REACT_APP_USER_POOL_ID=$REACT_APP_USER_POOL_ID"
           echo "REACT_APP_USER_POOL_CLIENT_ID=$REACT_APP_USER_POOL_CLIENT_ID"
@@ -39,10 +45,6 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Print aws-exports.js contents
-        run: |
-          cat src/aws-exports.js
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.6.1
