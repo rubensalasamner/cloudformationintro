@@ -1,4 +1,4 @@
-name: Deploy React App with .env.dev Configuration
+name: Deploy Project to AWS
 
 on:
   workflow_dispatch:
