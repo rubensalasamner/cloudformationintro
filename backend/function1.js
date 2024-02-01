@@ -5,12 +5,12 @@ const handler = async (event) => {
 
   const response = {
     statusCode: 200,
-    headers: {
+    /* headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "OPTIONS,GET,PUT,POST,DELETE",
       "Access-Control-Allow-Headers":
         "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-    },
+    }, */
     body: JSON.stringify("Hello from Lambda yo!"),
   };
   return response;
