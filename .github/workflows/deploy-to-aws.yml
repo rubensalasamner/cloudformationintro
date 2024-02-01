@@ -31,21 +31,6 @@ jobs:
             fi
           done < .env.dev
 
-      - name: Replace environment variables in aws-exports.js
-        run: |
-          sed -i "s/REACT_APP_USER_POOL_REGION_PLACEHOLDER/${{ env.REACT_APP_USER_POOL_REGION }}/g" src/aws-exports.js
-          sed -i "s/REACT_APP_USER_POOL_ID_PLACEHOLDER/${{ env.REACT_APP_USER_POOL_ID }}/g" src/aws-exports.js
-          sed -i "s/REACT_APP_AUTH_USER_POOL_WEB_CLIENT_ID_PLACEHOLDER/${{ env.REACT_APP_AUTH_USER_POOL_WEB_CLIENT_ID }}/g" src/aws-exports.js
-
-      - name: Print environment variables (optional step for debugging)
-        run: |
-          echo "REACT_APP_USER_POOL_ID=$REACT_APP_USER_POOL_ID"
-          echo "REACT_APP_USER_POOL_CLIENT_ID=$REACT_APP_USER_POOL_CLIENT_ID"
-          # ... print other relevant variables
-
-      - name: Print modified aws-exports.js (Ensure no sensitive info is logged)
-        run: cat src/aws-exports.js
-
       - name: Build
         run: npm run build
 
@@ -56,9 +41,6 @@ jobs:
           role-to-assume: arn:aws:iam::${{ env.REACT_APP_AWS_IAM }}:role/GithubActionsS3Role
           role-session-name: S3PublishPackage
           role-duration-seconds: 900
-
-      - name: Check login
-        run: aws sts get-caller-identity
 
       - name: Deploy static site to S3 bucket
         run: aws s3 sync ./build s3://${{ env.REACT_APP_BUCKET }}
