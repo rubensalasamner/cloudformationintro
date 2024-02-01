@@ -47,7 +47,7 @@ function App() {
         <div className="App">
           <header className="App-header">
             <img src={logo} className="App-logo" alt="logo" />
-            <p>Hello {user.username}! Welcome to the app.</p>
+            <p>Hello {user.username}! Welcome to the app gondolf.</p>
             <button onClick={() => callApi(user)}>API</button>
             <button onClick={signOut}>Sign out</button>
           </header>

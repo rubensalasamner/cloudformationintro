@@ -68,3 +68,16 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id ${{ env.REACT_APP_CLOUDFRONT_DISTRIBUTION_ID }} \
             --invalidation-batch "{\"Paths\":{\"Items\":[\"/*\"],\"Quantity\":1},\"CallerReference\":\"$(date +%s)\"}"
+
+      - name: Package Lambda Function
+        run: |
+          cd backend
+          zip -r function.zip function1.js
+          mv function.zip ../
+          cd ..
+
+      - name: Update Lambda Function Code
+        run: |
+          aws lambda update-function-code \
+            --function-name lambdafunction \
+            --zip-file fileb://function.zip

@@ -1,4 +1,3 @@
-// index.mjs
 const handler = async (event) => {
   console.log("Received event:", JSON.stringify(event, null, 2));
 
@@ -12,9 +11,9 @@ const handler = async (event) => {
       "Access-Control-Allow-Headers":
         "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
     },
-    body: JSON.stringify("Hello from Lambda!"),
+    body: JSON.stringify("Hello from Lambda yo!"),
   };
   return response;
 };
 
-export { handler };
+module.exports.handler = handler;
