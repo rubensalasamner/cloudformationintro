@@ -25,7 +25,7 @@ function App() {
     console.log("user", user);
     try {
       const response = await fetch(
-        "https://0gvuopt830.execute-api.eu-north-1.amazonaws.com/dev/example",
+        "https://c8bftx3q3j.execute-api.eu-north-1.amazonaws.com/dev/example",
         {
           method: "GET",
           headers: {
